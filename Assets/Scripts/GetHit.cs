@@ -11,6 +11,7 @@ public class GetHit : MonoBehaviour
     private PlayerMovement playerMovementScript;
     private Rigidbody rb;
     private Transform enemy;
+    [SerializeField] private int hp = 3;
 
     private void Start()
     {
@@ -63,6 +64,14 @@ public class GetHit : MonoBehaviour
         playerMovementScript.playerStats.canMove = false;
         playerMovementScript.soundManager.PlayHitSound();
         StartCoroutine("Recover");
+        // プレイヤーが敵と衝突したときにダメージを受ける
+        hp--;
+        if (hp < 1)
+        {
+            // cankill
+            hurt = false;
+            Debug.Log(hurt);
+        }
     }
     private IEnumerator Recover()
     {
