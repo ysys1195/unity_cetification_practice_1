@@ -7,7 +7,26 @@ public class CollectCoins : MonoBehaviour
     [Tooltip("The particles that appear after the player collects a coin.")]
     public GameObject coinParticles;
 
-    PlayerMovement playerMovementScript;
+    private PlayerMovement playerMovementScript;
+    private CoinManager coinManager;
+    
+    void Start()
+    {
+        coinManager = FindObjectOfType<CoinManager>();
+        
+        if (coinManager != null)
+        {
+            coinManager.onHealthRecovery.AddListener(RecoverPlayerHealth);
+        }
+    }
+    
+    void RecoverPlayerHealth()
+    {
+        if (playerMovementScript != null)
+        {
+            playerMovementScript.ChangeHealth(1);
+        }
+    }
 
     void OnTriggerEnter(Collider other)
     {
@@ -16,11 +35,13 @@ public class CollectCoins : MonoBehaviour
             playerMovementScript = other.GetComponent<PlayerMovement>();
             playerMovementScript.soundManager.PlayCoinSound();
             ScoreManager.score += 10;
-            CoinManager.Coin += 1;
-            if (CoinManager.IsCoinToRecover())
+            
+            // コインを追加
+            if (coinManager != null)
             {
-                playerMovementScript.ChangeHealth(1);
+                coinManager.AddCoin();
             }
+            
             GameObject particles = Instantiate(coinParticles, transform.position, new Quaternion());
             Destroy(gameObject);
         }

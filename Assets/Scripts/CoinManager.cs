@@ -1,21 +1,44 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class CoinManager : MonoBehaviour
 {
-    public static int Coin;
-
+    [SerializeField] private int coinsRequiredForRecovery = 10;
+    
+    public UnityEvent onHealthRecovery = new UnityEvent();
+    
+    public int CurrentCoins { get; private set; }
+    
+    public static CoinManager Instance { get; private set; }
+    
+    void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+    
     void Start()
     {
-        Coin = 0;
+        CurrentCoins = 0;
     }
-
-    public static bool IsCoinToRecover()
+    
+    public void AddCoin()
     {
-        if (Coin != 10) return false;
-
-        Coin = 0;
-        return true;
+        CurrentCoins++;
+        
+        if (CurrentCoins >= coinsRequiredForRecovery)
+        {
+            CurrentCoins -= coinsRequiredForRecovery;
+            onHealthRecovery.Invoke();
+        }
     }
 }
