@@ -4,25 +4,6 @@ using UnityEngine;
 
 public class RefactorEnemy : MonoBehaviour
 {
-    public Stats enemyStats;
-
-    [Tooltip("The transform that will lock onto the player once the enemy has spotted them.")]
-    public Transform sight;
-
-    [Tooltip("The transform to which the enemy will pace back and forth to.")]
-    public Transform[] patrolPoints;
-
-    [Tooltip("Blue explosion particles")]
-    public GameObject enemyExplosionParticles;
-
-    private bool slipping = false;
-
-    public float facing;
-
-    public Rigidbody rb;
-
-    private GameObject player;
-
     /// <summary>
     /// Contains tunable parameters to tweak the enemy's movement and behavior.
     /// </summary>
@@ -39,30 +20,51 @@ public class RefactorEnemy : MonoBehaviour
         [Tooltip("How fast the enemy runs after the player (only when idle is false).")]
         public float chaseSpeed;
 
-        [Tooltip("Whether the enemy is idle or not. Once the player is within distance, idle will turn false and the enemy will chase the player.")]
-        public bool idle;
-
         [Tooltip("How close the enemy needs to be to explode")]
         public float explodeDist;
 
     }
+
+
+    // Whether the enemy is idle or not. Once the player is within distance, idle will turn false and the enemy will chase the player.
+    public bool idle;
+    public Stats enemyStats;
+
+    [Tooltip("The transform that will lock onto the player once the enemy has spotted them.")]
+    public Transform sight;
+
+
+    [Tooltip("Blue explosion particles")]
+    public GameObject enemyExplosionParticles;
+
+    private bool slipping = false;
+
+    public float facing;
+
+    public Rigidbody rb;
+
+    public GameObject player;
+    private Patrol patrolBehavior;
+
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
+        patrolBehavior = GetComponent<Patrol>();
     }
     private void Update()
     {
         // changes the enemy's behavior: pacing in circles or chasing the player
-        if (enemyStats.idle == true)
+        if (idle == true)
         {
-            PatrolManager.PatrolLogic(transform, patrolPoints, enemyStats.walkSpeed);
+            patrolBehavior.Move(enemyStats.walkSpeed);
         }
         else
         {
             ChasePlayer();
+            CheckExplode();
         }
 
-        SlipLogic();
+        CheckSlipping();
     }
 
     private void ChasePlayer()
@@ -72,15 +74,19 @@ public class RefactorEnemy : MonoBehaviour
         transform.LookAt(sight);
         transform.position = Vector3.MoveTowards(transform.position, player.transform.position, Time.deltaTime * enemyStats.chaseSpeed);
 
+    }
+
+    private void CheckExplode()
+    {
         //Explode if we get within the enemyStats.explodeDist
         if (Vector3.Distance(transform.position, player.transform.position) < enemyStats.explodeDist)
         {
             StartCoroutine("Explode");
-            enemyStats.idle = true;
+            idle = true;
         }
     }
 
-    private void SlipLogic()
+    private void CheckSlipping()
     {
         // stops enemy from following player up the inaccessible slopes
         if (slipping == true)
@@ -102,22 +108,22 @@ public class RefactorEnemy : MonoBehaviour
     }
 
 
-   private void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
         //start chasing if the player gets close enough
         if (other.gameObject.tag == "Player")
         {
             player = other.gameObject;
-            enemyStats.idle = false;
+            idle = false;
         }
     }
 
-   private void OnTriggerExit(Collider other)
+    private void OnTriggerExit(Collider other)
     {
         //stop chasing if the player gets far enough away
         if (other.gameObject.tag == "Player")
         {
-            enemyStats.idle = true;      
+            idle = true;
         }
     }
 
